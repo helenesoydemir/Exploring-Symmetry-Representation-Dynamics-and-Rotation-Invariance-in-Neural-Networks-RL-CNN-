@@ -14,6 +14,20 @@ def init_params(m):
         if m.bias is not None:
             m.bias.data.fill_(0)
 
+class convNet(nn.Module):
+    def __init__(self, obs_space, action_space, use_memory=False, use_text=False):
+        self.l1 = nn.Conv2d(3, 16, (2, 2))
+        self.l2 = nn.ReLU()
+        self.l3 = nn.MaxPool2d((2, 2))
+        self.l4 = nn.Conv2d(16, 32, (2, 2))
+        self.l5 = nn.ReLU()
+        self.l6 = nn.Conv2d(32, 64, (2, 2))
+        self.l7 = nn.ReLU()
+    
+    def forward(self, x):
+        return x
+
+
 
 class ACModel(nn.Module, torch_ac.RecurrentACModel):
     def __init__(self, obs_space, action_space, use_memory=False, use_text=False):
@@ -78,9 +92,28 @@ class ACModel(nn.Module, torch_ac.RecurrentACModel):
     def semi_memory_size(self):
         return self.image_embedding_size
 
+    def forwardConv(self, x):
+        tmp1 = self.image_conv[0](x)
+        tmp2 = self.image_conv[1](tmp1)
+        tmp3 = self.image_conv[2](tmp2)
+        tmp4 = self.image_conv[3](tmp3)
+        tmp5 = self.image_conv[4](tmp4)
+        tmp6 = self.image_conv[5](tmp5)
+        tmp7 = self.image_conv[6](tmp6)
+
+        return tmp7, [tmp1,tmp2,tmp3,tmp4,tmp5,tmp6, tmp7]
+
+    def forwardActor(self, x):
+        tmp1 = self.actor[0](x)
+        tmp2 = self.actor[1](tmp1)
+        tmp3 = self.actor[2](tmp2)
+        return tmp3, [tmp1,tmp2,tmp3]
+
+
     def forward(self, obs, memory):
         x = obs.image.transpose(1, 3).transpose(2, 3)
-        x = self.image_conv(x)
+        x, tmp = self.forwardConv(x)
+        # x = self.image_conv(x)
         x = x.reshape(x.shape[0], -1)
 
         if self.use_memory:
@@ -94,8 +127,14 @@ class ACModel(nn.Module, torch_ac.RecurrentACModel):
         if self.use_text:
             embed_text = self._get_embed_text(obs.text)
             embedding = torch.cat((embedding, embed_text), dim=1)
+            tmp.append(embedding)
 
-        x = self.actor(embedding)
+        # x = self.actor(embedding)
+        x, tmp2 = self.forwardActor(embedding)
+        
+        # print(len(tmp),len(tmp2))
+
+
         dist = Categorical(logits=F.log_softmax(x, dim=1))
 
         x = self.critic(embedding)
