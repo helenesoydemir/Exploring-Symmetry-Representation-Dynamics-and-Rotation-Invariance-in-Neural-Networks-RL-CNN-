@@ -98,8 +98,7 @@ if __name__ == "__main__":
 
     envs = []
     for i in range(args.procs):
-        # envs.append(utils.make_env(args.env, args.seed + 10000 * i))
-        envs.append(utils.make_env(args.env))
+        envs.append(utils.make_env(args.env, args.seed + 10000 * i))
     txt_logger.info("Environments loaded\n")
 
     # Load training status
@@ -119,7 +118,7 @@ if __name__ == "__main__":
 
     # Load model
 
-    acmodel = ACModel(obs_space, envs[0].action_space, args.mem, args.text)#changed ##################### didnt have -3
+    acmodel = ACModel(obs_space, envs[0].action_space, args.mem, args.text)
     if "model_state" in status:
         acmodel.load_state_dict(status["model_state"])
     acmodel.to(device)
@@ -139,9 +138,9 @@ if __name__ == "__main__":
     else:
         raise ValueError("Incorrect algorithm name: {}".format(args.algo))
 
-    # if "optimizer_state" in status:
-    #     algo.optimizer.load_state_dict(status["optimizer_state"])
-
+    if "optimizer_state" in status:
+        algo.optimizer.load_state_dict(status["optimizer_state"])
+        
     txt_logger.info("Optimizer loaded\n")
 
     # Train model
@@ -149,7 +148,7 @@ if __name__ == "__main__":
     num_frames = status["num_frames"]
     update = status["update"]
     start_time = time.time()
-    counter = 0
+
     while num_frames < args.frames:
         # Update model parameters
         update_start_time = time.time()
@@ -203,10 +202,3 @@ if __name__ == "__main__":
                 status["vocab"] = preprocess_obss.vocab.vocab
             utils.save_status(status, model_dir)
             txt_logger.info("Status saved")
-
-        # print(rreturn_per_episode['mean'] < 0.4, update)
-        # if rreturn_per_episode['mean'] < 0.4 and (update%200==0):
-        #     print('Had to restart')
-        #     counter = logs["num_frames"]
-        #     for env in envs:
-        #         env.reset()

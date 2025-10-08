@@ -13,7 +13,7 @@ from torch.distributions.categorical import Categorical
 import torch_ac
 import utils
 
-device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Function from https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/model.py
 def init_params(m):
@@ -195,16 +195,13 @@ import numpy as np
 
 obs_space = {'image': (7, 7, 3), 'text': 100}
 
-env = utils.make_env('MiniGrid-GoToDoor-5x5-v0', 123)
+env = utils.make_env('MiniGrid-GoToDoor-5x5-v0', 123, render_mode="human")
 env.reset()
 
-agent = Agent(env.observation_space, env.action_space, './storage/PPO/GoToDoor4/', use_text=True)
-agent = Agent(env.observation_space, env.action_space, './storage/A2C/GoToDoor2/', use_text=True)
-# agent = Agent(env.observation_space, env.action_space, './storage/GoToDoor/', use_text=True)
+agent = Agent(env.observation_space, env.action_space, './storage/GoToDoor3/',
+              use_text=True)
 
 
-goal_door = {"Left_Door": [[]], "Right_Door": [[]], "Front_Door": [[]], "Back_Door": [[]]}
-color = ['red', 'green', 'blue', 'purple', 'yellow', 'grey']
 
 start = [2,5,0]
 start7 = np.block([start, start, start, start, start, start, start])
@@ -215,315 +212,157 @@ grid = np.vstack([start4, [1, 0, 0], [1, 0, 0], [1, 0, 0]])
 central_door = grid.copy()
 central_door[3] = [4, 8, 1]
 side_door2 = np.vstack([start5, [4, 7, 1], start])
-exmp_state_center = np.concatenate([[start7], [side_door], [grid], [central_door], [grid], [side_door2], [start7]])
-exmp_state_left = np.concatenate([[start7], [start7], [side_door], [grid], [central_door], [grid], [side_door2]])
-exmp_state_right = np.concatenate([[side_door], [grid], [central_door], [grid], [side_door2], [start7], [start7]])
-exmp_state_list = [exmp_state_center, exmp_state_left, exmp_state_right]
+rep = np.concatenate([[start7], [side_door], [grid], [central_door], [grid], [side_door2], [start7]])
+rep_list = []
+text_list = []
+color = ['red', 'green', 'blue', 'purple', 'yellow', 'grey']
+for left_door in [0,1,2,3,4,5]:
+  for goal_door in [0,1,2,3,4,5]:
+    for right_door in [0,1,2,3,4,5]:
+      if(goal_door != left_door and goal_door != right_door and left_door != right_door):
+        rep2 = np.where(rep == 9, left_door, rep)
+        rep3 = np.where(rep2 == 8, goal_door, rep2)
+        rep4 = np.where(rep2 == 7, right_door, rep3)
+        text = 'go to the '+ color[goal_door] +' door'
+        rep_list.append(rep4)
+        text_list.append(text)
 
-for shift_up in [0, 1, 2]:
-    for exmp_state in exmp_state_list:
-      base_state = exmp_state.copy()
-      for shifts in range(shift_up):
-          for i in range(len(base_state)):
-            x = base_state[i]
-            y = x[:6]
-            z = np.vstack([start, y])
-            base_state[i] = z
+start = [2,5,0]
+start7 = np.block([start, start, start, start, start, start, start])
+start5 = np.block([start, start, start, start, start])
+side_door = np.vstack([start5, [4, 9, 1], start])
+start4 = np.block([start, start, start, start])
+grid = np.vstack([start4, [1, 0, 0], [1, 0, 0], [1, 0, 0]])
+central_door = grid.copy()
+central_door[3] = [4, 8, 1]
+side_door2 = np.vstack([start5, [4, 7, 1], start])
+rep = np.concatenate([[start7], [side_door], [grid], [central_door], [grid], [side_door2], [start7]])
+for i in range(len(rep)):
+  x = rep[i]
+  y = x[:6]
+  z = np.vstack([start, y])
+  rep[i] = z
+rep_list = []
+text_list = []
+color = ['red', 'green', 'blue', 'purple', 'yellow', 'grey']
+for left_door in [0,1,2,3,4,5]:
+  for goal_door in [0,1,2,3,4,5]:
+    for right_door in [0,1,2,3,4,5]:
+      if(goal_door != left_door and goal_door != right_door and left_door != right_door):
+        rep2 = np.where(rep == 9, left_door, rep)
+        rep3 = np.where(rep2 == 8, goal_door, rep2)
+        rep4 = np.where(rep2 == 7, right_door, rep3)
+        text = 'go to the '+ color[left_door] +' door'
+        rep_list.append(rep4)
+        text_list.append(text)
 
-      for left_door in range(6):
-          for right_door in range(6):
-              for front_door in range(6):
-                  for back_door in range(6):
-                    x = [left_door, right_door, front_door, back_door]
-                    if(len(x) <= len(set(x))):
-                        state_w_leftd = np.where(base_state == 9, left_door, base_state)
-                        state_w_frontd = np.where(state_w_leftd == 8, front_door, state_w_leftd)
-                        final_state = np.where(state_w_frontd == 7, right_door, state_w_frontd)
 
-                        left_door_goal = 'go to the '+ color[left_door] +' door'
-                        goal_door['Left_Door'][-1].append({'image':final_state,'text':left_door_goal})
-                        right_door_goal = 'go to the '+ color[right_door] +' door'
-                        goal_door['Right_Door'][-1].append({'image':final_state,'text':right_door_goal})
-                        front_door_goal = 'go to the '+ color[front_door] +' door'
-                        goal_door['Front_Door'][-1].append({'image':final_state,'text':front_door_goal})
-                        back_door_goal = 'go to the '+ color[back_door] +' door'
-                        goal_door['Back_Door'][-1].append({'image':final_state,'text':back_door_goal})
 
-      goal_door['Left_Door'].append([])   
-      goal_door['Right_Door'].append([])
-      goal_door['Front_Door'].append([])
-      goal_door['Back_Door'].append([])    
 
-hiddenLayerValues_dict = {}
-convs1 = []
-convs2 = []
-convs3 = []
-convs4 = []
-convs5 = []
-convs6 = []
-convs7 = []
-convs8 = []
+hiddenLayerValues = []
 actions = []
-ls1 = []
-ls2 = []
-ls3 = []
-for goal_key in goal_door.keys():
-    goal = goal_door[goal_key]
-    rep_list = []
-    text_list = []
-    for states in goal[:-1]:
-        for state in states:
-            rep_list.append(state['image'])
-            text_list.append(state['text'])
+for idx, (image, text) in enumerate(zip(rep_list, text_list)):
+    if idx > 24:
+        break
+    obs = {'image': image, 
+           'direction': np.int64(1), 
+           'mission': text}
     
+    action = agent.get_action(obs)
+    #hidden[0]: 0 - 6 convolutional, 7 textembeddings
+    #hidden[1]: 0 - 2 actor network
+    hidden = agent.hidden
+    hiddenLayerValues.append(hidden)
+    actions.append(torch.tensor(action))
+    print(action)
     
-    hiddenLayerValues = []
-    # convs1 = []
-    # convs2 = []
-    # convs3 = []
-    # convs4 = []
-    # convs5 = []
-    # convs6 = []
-    # convs7 = []
-    # convs8 = []
-    # actions = []
-    # ls1 = []
-    # ls2 = []
-    # ls3 = []
-    for idx, (image, text) in enumerate(zip(rep_list, text_list)):
-        # if idx > 24:
-        #     break
-        obs = {'image': image, 
-               'direction': np.int64(1),
-               'mission': text}
-        
-        action = agent.get_action(obs)
-        #hidden[0]: 0 - 6 convolutional, 7 textembeddings
-        #hidden[1]: 0 - 2 actor network
-        hidden = agent.hidden
-        # if not action==0:
-        #     continue
-        hiddenLayerValues.append(hidden)
-        actions.append(torch.tensor(action))
-        # print(action)
-    
-        conv1 = hidden[0][0].flatten()
-        conv2 = hidden[0][1].flatten()
-        conv3 = hidden[0][2].flatten()
-        conv4 = hidden[0][3].flatten()
-        conv5 = hidden[0][4].flatten()
-        conv6 = hidden[0][5].flatten()
-        conv7 = hidden[0][6].flatten()
-        conv8 = hidden[0][7].flatten()
-        action = action
-    
-        l1 = hidden[1][0].flatten()
-        l2 = hidden[1][1].flatten()
-        l3 = hidden[1][2].flatten()
-        
-        convs1.append(conv1)
-        convs2.append(conv2)
-        convs3.append(conv3)
-        convs4.append(conv4)
-        convs5.append(conv5)
-        convs6.append(conv6)
-        convs7.append(conv7)
-        convs8.append(conv8)
-        ls1.append(l1)
-        ls2.append(l2)
-        ls3.append(l3)
-    
-convs1 = torch.stack(convs1)
-convs2 = torch.stack(convs2)
-convs3 = torch.stack(convs3)
-convs4 = torch.stack(convs4)
-convs5 = torch.stack(convs5)
-convs6 = torch.stack(convs6)
-convs7 = torch.stack(convs7)
-convs8 = torch.stack(convs8)
-actions = torch.stack(actions)
-ls1 = torch.stack(ls1)
-ls2 = torch.stack(ls2)
-ls3 = torch.stack(ls3)
-    
-    # hiddenLayerValues_dict[goal_key] = {"hidden":hiddenLayerValues, "action": action}
-    # hiddenLayerValues_dict[goal_key] = hiddenLayerValues
 
-# def get_dispersion(nconv):
-#   print(nconv.shape)
-#   nconv = nconv.view(nconv.shape[0],-1)
-#   nconv_mean = nconv.mean(1)
-#   conv1_tmp = nconv - nconv_mean.unsqueeze(1)
-#   conv1_sq = torch.sqrt(1/nconv_mean.shape[0] * torch.sum((torch.sum(conv1_tmp**2))**2, 0))
+conv1 = torch.stack([data[0][0].flatten() for data in hiddenLayerValues])
+conv2 = torch.stack([data[0][1].flatten() for data in hiddenLayerValues])
+conv3 = torch.stack([data[0][2].flatten() for data in hiddenLayerValues])
+conv4 = torch.stack([data[0][3].flatten() for data in hiddenLayerValues])
+conv5 = torch.stack([data[0][4].flatten() for data in hiddenLayerValues])
+conv6 = torch.stack([data[0][5].flatten() for data in hiddenLayerValues])
+conv7 = torch.stack([data[0][6].flatten() for data in hiddenLayerValues])
+conv8 = torch.stack([data[0][7].flatten() for data in hiddenLayerValues])
+action = torch.stack(actions)
 
-#   return conv1_sq
+l1 = torch.stack([data[1][0].flatten() for data in hiddenLayerValues])
+l2 = torch.stack([data[1][1].flatten() for data in hiddenLayerValues])
+l3 = torch.stack([data[1][2].flatten() for data in hiddenLayerValues])
 
-network_activations = [convs1, convs2, convs3, convs4, convs5, convs6, convs7, convs8,
-                       ls1, ls2, ls3,
-                       actions.to(device).float()]
+conv1_mean = conv1.mean(1)
+conv2_mean = conv2.mean(1)
+conv3_mean = conv3.mean(1)
+conv4_mean = conv4.mean(1)
+conv5_mean = conv5.mean(1)
+conv6_mean = conv6.mean(1)
+conv7_mean = conv7.mean(1)
+conv8_mean = conv8.mean(1)
+action_mean = 0#action.mean(1)
 
-# dispersions = []
-# dispersions_n = []
-# for relu_ in network_activations:
-#   mean_list = []
-#   mean = torch.zeros(relu_[0].flatten().shape).to(device)
-#   for i in range(relu_.shape[0]):
-#     mean += relu_[i].flatten()
-#     if i%360==1:
-#       mean_list.append(mean/360)
-#       mean = torch.zeros(relu_[0].flatten().shape).to(device)
-
-#   denominator = 0
-#   count = 0
-#   # for i in range(int(relu_.shape[0]/4)):
-#   #   for j in range(int(relu_.shape[0]/4)):
-#   for i in range(int(36)):
-#     for j in range(int(36)):
-#         if i != j:
-#           denominator += torch.sum((mean_list[i] - mean_list[j])**2)
-#           count+=1
-
-#   denominator = denominator/count
-
-#   numerator = 0
-#   for i in range(relu_.shape[0]):
-#     if i%(idx + 1)==0:
-#       numerator += get_dispersion(relu_[i:i+(idx + 1)])
-#   numerator = numerator/int(relu_.shape[0]/(idx + 1))
-
-#   dispersions.append((numerator/denominator).item())
-#   dispersions_n.append(numerator)
-#   # dispersions.append(numerator.item())
+l1_mean = conv5.mean(1)
+l2_mean = conv6.mean(1)
+l3_mean = conv7.mean(1)
 
 
-dispersions = []
-for layer_ in network_activations:
-    mean_list = []
-    mean = torch.zeros(layer_[0].flatten().shape)
-    # print(mean.shape)
+conv1_tmp = conv1 - conv1_mean.unsqueeze(1)
+conv2_tmp = conv2 - conv2_mean.unsqueeze(1)
+conv3_tmp = conv3 - conv3_mean.unsqueeze(1)
+conv4_tmp = conv4 - conv4_mean.unsqueeze(1)
+conv5_tmp = conv5 - conv5_mean.unsqueeze(1)
+conv6_tmp = conv6 - conv6_mean.unsqueeze(1)
+conv7_tmp = conv7 - conv7_mean.unsqueeze(1)
+conv8_tmp = conv8 - conv8_mean.unsqueeze(1)
+action_tmp = action# - action_mean.unsqueeze(1)
 
-    for i in range(layer_.shape[0]):
-        mean += layer_[i].flatten()
-        if i%360==359:
-            mean_list.append(mean)
-            mean = torch.zeros(layer_[0].flatten().shape)
+l1_tmp = l1 - l1_mean.unsqueeze(1)
+l2_tmp = l2 - l2_mean.unsqueeze(1)
+l3_tmp = l3 - l3_mean.unsqueeze(1)
 
-    variance_list = []
-    variance = 0
-    sym_state = 0
-    for i in range(layer_.shape[0]):
-        variance += torch.sum((layer_[i].flatten() - mean_list[sym_state])**2)
-        if i%360==359:
-            variance_list.append(variance)
-            variance = 0
-            sym_state += 1
+conv1_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv1_tmp**2))**2, 0))
+conv2_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv2_tmp**2))**2, 0))
+conv3_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv3_tmp**2))**2, 0))
+conv4_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv4_tmp**2))**2, 0))
+conv5_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv5_tmp**2))**2, 0))
+conv6_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv6_tmp**2))**2, 0))
+conv7_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv7_tmp**2))**2, 0))
+conv8_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(conv8_tmp**2))**2, 0))
+action_sq = torch.sqrt(1/conv1_mean.shape[0] * torch.sum((torch.sum(action_tmp**2))**2, 0))
 
-    mean_variance = torch.tensor(variance_list)/2
-    # print(variance_list)
-    # print(mean_variance)
+l1_sq = torch.sqrt(1/l1_mean.shape[0] * torch.sum((torch.sum(l1_tmp**2))**2, 0))
+l2_sq = torch.sqrt(1/l2_mean.shape[0] * torch.sum((torch.sum(l2_tmp**2))**2, 0))
+l3_sq = torch.sqrt(1/l3_mean.shape[0] * torch.sum((torch.sum(l3_tmp**2))**2, 0))
 
-    expected_dispersion = torch.mean(torch.sqrt(mean_variance))
-    # print(expected_dispersion)
-    # print(torch.sqrt(mean_variance))
+# conv1: nn.Conv2d(3, 16, (2, 2)),
+# conv2: nn.ReLU(),#
+# conv3: nn.MaxPool2d((2, 2)),
+# conv4: nn.Conv2d(16, 32, (2, 2)),
+# conv5: nn.ReLU(),#
+# conv6: nn.Conv2d(32, 64, (2, 2)),
+# conv7: nn.ReLU()#
 
-    mean_pairwise_dist = 0
-    count = 0
-    for i in range(len(mean_list)):
-        for j in range(len(mean_list)):
-            if i!=j:
-                mean_pairwise_dist += torch.sqrt(torch.sum((mean_list[i] - mean_list[j])**2))
-                count += 1
+# conv8: Text embeddings
 
-    mean_pairwise_dist = mean_pairwise_dist/count
-
-    normalized_dispersion = expected_dispersion/mean_pairwise_dist
-
-    dispersions.append(normalized_dispersion)
-
-    
-    
-    
-# 4 goals
-# 9 states (10  with 1 empty)
-# 360 sim states
-# goal_door['Left_Door']
-# print(torch.sum(torch.stack(actions) < 3)/len(actions))
-
-
-# conv1 = torch.stack([data[0][0].flatten() for data in hiddenLayerValues])
-# conv2 = torch.stack([data[0][1].flatten() for data in hiddenLayerValues])
-# conv3 = torch.stack([data[0][2].flatten() for data in hiddenLayerValues])
-# conv4 = torch.stack([data[0][3].flatten() for data in hiddenLayerValues])
-# conv5 = torch.stack([data[0][4].flatten() for data in hiddenLayerValues])
-# conv6 = torch.stack([data[0][5].flatten() for data in hiddenLayerValues])
-# conv7 = torch.stack([data[0][6].flatten() for data in hiddenLayerValues])
-# conv8 = torch.stack([data[0][7].flatten() for data in hiddenLayerValues])
-# action = torch.stack(actions)
-
-# l1 = torch.stack([data[1][0].flatten() for data in hiddenLayerValues])
-# l2 = torch.stack([data[1][1].flatten() for data in hiddenLayerValues])
-# l3 = torch.stack([data[1][2].flatten() for data in hiddenLayerValues])
-
-# action_mean = 0#action.mean(1)
-# action_tmp = action# - action_mean.unsqueeze(1)
-# action_sq = torch.sqrt(1/action.shape[0] * torch.sum((torch.sum(action_tmp**2))**2, 0))
-
-# conv1_sq = get_dispersion(conv1)
-# conv2_sq = get_dispersion(conv2)
-# conv3_sq = get_dispersion(conv3)
-# conv4_sq = get_dispersion(conv4)
-# conv5_sq = get_dispersion(conv5)
-# conv6_sq = get_dispersion(conv6)
-# conv7_sq = get_dispersion(conv7)
-# conv8_sq = get_dispersion(conv8)
-
-# l1_sq = get_dispersion(l1)
-# l2_sq = get_dispersion(l2)
-# l3_sq = get_dispersion(l3)
-
-# 0, conv1: nn.Conv2d(3, 16, (2, 2)),
-# 1, conv2: nn.ReLU(),#
-# 2, conv3: nn.MaxPool2d((2, 2)),
-# 3, conv4: nn.Conv2d(16, 32, (2, 2)),
-# 4, conv5: nn.ReLU(),#
-# 5, conv6: nn.Conv2d(32, 64, (2, 2)),
-# 6, conv7: nn.ReLU()#
-
-# 7, conv8: Text embeddings
-# 8, self.embedding_size=92
-
-# 9, l1: nn.Linear(self.embedding_size, 64),
-# 10, l2: nn.Tanh(),
-# 11, l3: nn.Linear(64, action_space.n)
+# l1: nn.Linear(self.embedding_size, 64),
+# l2: nn.Tanh(),
+# l3: nn.Linear(64, action_space.n)
 
 import matplotlib.pyplot as plt
-# plt.close('all')
-plt.figure(1)
-plt.plot([dispersions[0],
-          dispersions[1],
-          dispersions[2],
-          dispersions[3],
-          dispersions[4],
-          dispersions[5],
-          dispersions[6],
-          dispersions[7],
-          dispersions[8],
-          dispersions[9],
-          dispersions[10],
-          dispersions[11],
+plt.close('all')
+plt.figure(2)
+plt.plot([#conv1_sq.item(),
+          conv2_sq.item(),
+          #conv3_sq.item(),
+          # conv4_sq.item(),
+          conv5_sq.item(),
+          # conv6_sq.item(),
+          conv7_sq.item(),
+          # l1_sq.item(),
+          l2_sq.item(),
+          l3_sq.item(),
+          action_sq.item(),
           ])
-# plt.plot([#conv1_sq.item(),
-#           conv2_sq.item(),
-#           #conv3_sq.item(),
-#           # conv4_sq.item(),
-#           conv5_sq.item(),
-#           # conv6_sq.item(),
-#           conv7_sq.item(),
-#           # l1_sq.item(),
-#           l2_sq.item(),
-#           l3_sq.item(),
-#           action_sq.item(),
-#           ])
 # plt.plot([#conv1_sq.item(),
 #           conv2_sq.item(),
 #           #conv3_sq.item(),
