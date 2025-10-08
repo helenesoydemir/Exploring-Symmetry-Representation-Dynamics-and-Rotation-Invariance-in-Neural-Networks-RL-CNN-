@@ -2,7 +2,7 @@
 ### Exploring Symmetry, Representation Dynamics, and Rotation Invariance in Neural Networks  
 
 **Summer School Project – NeuroBridges 2025**  
-*Mentors: Prof. David Hansel, Prof. Yonatan Loewenstein, Prof. Ahmed Alaa, and Cluny*  
+*Mentors: Prof. David Hansel, Prof. Yonatan Loewenstein, Prof. Ahmed El Hady https://neurobridges.net/upcoming/program *  
 
 ---
 
@@ -54,14 +54,14 @@ We compared:
 - **ResNet-50**  
 
 Each model was tested on rotated image datasets to assess how feature representations maintain **rotation invariance**.  
-The hypothesis is that **rotation-invariant manifolds** may correspond to **symmetrical representational states**, similar to those observed in biological systems and theoretical work (e.g., *RIFF model*, Nelken et al.).  
+The hypothesis is that **rotation-invariant** may correspond to **symmetrical representational states**, similar to those observed in biological systems and theoretical work (e.g., *RIFF model*, Nelken et al.).  
 
 ---
 
 ## 📊 Results (Preliminary)  
 
 - In **RL agents**, representation dispersion **increased with depth** and training progress, with **PPO** showing greater internal diversity than **A2C**.  
-- In **CNNs**, **ResNet** demonstrated stronger **rotation invariance** and more structured representational manifolds compared to **AlexNet**, supporting the hypothesis of *symmetrical state organization*.  
+- In **CNNs**, **ResNet** demonstrated stronger **rotation invariance** and more structured representations compared to **AlexNet**, supporting the hypothesis of *symmetrical state organization*.  
 - Cross-domain comparison revealed **shared geometric properties** in representation dynamics between supervised and reinforcement learning systems.  
 
 ---
