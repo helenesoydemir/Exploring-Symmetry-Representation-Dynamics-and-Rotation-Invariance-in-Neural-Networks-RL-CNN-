@@ -1,0 +1,78 @@
+# 🧩 Representation Dispersion Across Layers  
+### Exploring Symmetry, Representation Dynamics, and Rotation Invariance in Neural Networks  
+
+**Summer School Project – NeuroBridges 2025**  
+*Mentors: Prof. David Hansel, Prof. Yonatan Loewenstein, Prof. Ahmed Alaa, and Cluny*  
+
+---
+
+## 🧠 Overview  
+
+This project investigates **representation dispersion** and **symmetrical states** in artificial neural networks, inspired by the **RIFF framework** introduced by *Israel Nelken* and collaborators.  
+
+We explored how **internal representations** evolve and disperse across layers in two different learning contexts:  
+1. **Reinforcement Learning (RL)** – using agents trained in a *GoToDoor* game environment.  
+2. **Computer Vision** – using **convolutional neural networks (CNNs)** to analyze **rotation invariance** as a possible manifestation of symmetrical states.  
+
+---
+
+## 🎯 Objectives  
+
+- Examine **representation dispersion** across layers in **RL agents** trained with **A2C** and **PPO** algorithms.  
+- Investigate whether **rotation invariance** in CNNs (ResNet vs. AlexNet) can be interpreted as a form of **symmetrical representation state**.  
+- Bridge insights between **deep reinforcement learning** and **representational geometry** inspired by **neuroscience**.  
+
+---
+
+## ⚙️ Methods  
+
+### 🕹️ Reinforcement Learning Experiments  
+
+- **Environment:** *GoToDoor* — a simple navigation task where an agent must reach a target door using visual cues.  
+- **Agents:**  
+  - **A2C (Advantage Actor-Critic)**  
+  - **PPO (Proximal Policy Optimization)**  
+- **Analysis:**  
+  - Representation vectors were extracted across hidden layers.  
+  - We measured **dispersion**, **correlation**, and **symmetry** of internal states during learning.  
+
+### 🧭 Representation Dispersion Metrics  
+
+We computed:
+- **Inter-layer representational distance**  
+- **Within-layer variance**  
+- **Symmetry indices** (based on covariance and trajectory overlap between latent representations)  
+
+These measures help quantify how representations diverge or converge across network depth, reflecting internal organization patterns.
+
+---
+
+### 🧩 CNN Rotation Invariance  
+
+We compared:
+- **AlexNet**  
+- **ResNet-50**  
+
+Each model was tested on rotated image datasets to assess how feature representations maintain **rotation invariance**.  
+The hypothesis is that **rotation-invariant manifolds** may correspond to **symmetrical representational states**, similar to those observed in biological systems and theoretical work (e.g., *RIFF model*, Nelken et al.).  
+
+---
+
+## 📊 Results (Preliminary)  
+
+- In **RL agents**, representation dispersion **increased with depth** and training progress, with **PPO** showing greater internal diversity than **A2C**.  
+- In **CNNs**, **ResNet** demonstrated stronger **rotation invariance** and more structured representational manifolds compared to **AlexNet**, supporting the hypothesis of *symmetrical state organization*.  
+- Cross-domain comparison revealed **shared geometric properties** in representation dynamics between supervised and reinforcement learning systems.  
+
+---
+
+## 🔬 Scientific Context  
+
+This project builds on the concept of **Representation-Induced Functional Framework (RIFF)** developed by *Israel Nelken*, which links **symmetrical states** in neural populations to **robustness and generalization** in learning systems.  
+
+By extending these ideas to **artificial neural networks**, we aim to better understand how **symmetry, dispersion, and invariance** emerge across architectures and learning paradigms.  
+
+---
+
+## 📁 Repository Structure  
+
